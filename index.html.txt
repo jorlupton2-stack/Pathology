@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>Pathology Study App</title>
+
+  <!-- (Optional PWA) -->
+  <link rel="manifest" href="./manifest.webmanifest" />
+
+  <style>
+    :root{
+      --bg:#fff; --fg:#0b0b0b; --muted:#6b7280; --border:#e5e7eb;
+      --card:#fff; --shadow:0 1px 8px rgba(0,0,0,.05);
+      --danger:#dc2626; --primary:#111827; --secondary:#f3f4f6;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--fg)}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .brand{display:flex;gap:12px;align-items:flex-start}
+    .logo{width:44px;height:44px;border:1px solid var(--border);border-radius:18px;display:grid;place-items:center;box-shadow:var(--shadow)}
+    .title{margin:0;font-size:20px;font-weight:700}
+    .sub{margin:2px 0 0;color:var(--muted);font-size:13px}
+    .badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid var(--border);background:var(--secondary)}
+    .badge.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .btn{border:1px solid var(--border);background:var(--secondary);padding:10px 12px;border-radius:18px;cursor:pointer;font-weight:600}
+    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .tabs{display:flex;border:1px solid var(--border);border-radius:18px;overflow:hidden}
+    .tab{padding:10px 12px;background:#fff;border:none;cursor:pointer;font-weight:700}
+    .tab.active{background:var(--secondary)}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:900px){ .grid{grid-template-columns:360px 1fr} }
+    .card{border:1px solid var(--border);border-radius:22px;background:var(--card);box-shadow:var(--shadow)}
+    .card h3{margin:0;font-size:14px}
+    .card .hd{padding:14px 14px 8px}
+    .card .bd{padding:0 14px 14px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+    input, select, textarea{
+      width:100%;padding:10px 12px;border-radius:18px;border:1px solid var(--border);
+      font:inherit;background:#fff;
+    }
+    textarea{min-height:110px;resize:vertical}
+    .muted{color:var(--muted);font-size:12px}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .kpi > div{border:1px solid var(--border);border-radius:16px;padding:10px}
+    .kpi .n{font-size:22px;font-weight:800}
+    .hr{height:1px;background:var(--border);margin:12px 0}
+    .pillrow{display:flex;flex-wrap:wrap;gap:8px}
+    .pill{border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;background:#fff}
+    .pill.outline{background:#fff}
+    .pill.secondary{background:var(--secondary)}
+    .two{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:700px){ .two{grid-template-columns:1fr 1fr} }
+    .prog{height:10px;border-radius:999px;background:var(--secondary);overflow:hidden;border:1px solid var(--border)}
+    .prog > div{height:100%;background:var(--primary);width:0%}
+    .list{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:18px}
+    .item{padding:12px;border-bottom:1px solid var(--border)}
+    .item:last-child{border-bottom:none}
+    .lineclamp2{
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+    }
+    .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .checkbox{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:18px;padding:10px 12px;margin-top:10px}
+    .caseCard{padding:12px}
+    .caseGrid{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:800px){ .caseGrid{grid-template-columns:1fr 1fr} }
+    .small{font-size:13px}
+    .center{ text-align:center }
+    .hide{ display:none !important; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">🧪</div>
+      <div>
+        <div class="row" style="align-items:center">
+          <h1 class="title">Pathology Study App</h1>
+          <span id="dueBadge" class="badge">0 due</span>
+        </div>
+        <p class="sub">Offline flashcards, MCQs, cases, and spaced repetition — HTML edition.</p>
+      </div>
+    </div>
+
+    <div class="right">
+      <button class="btn" id="importBtn">Import</button>
+      <button class="btn" id="exportBtn">Export</button>
+      <input id="fileInput" type="file" accept="application/json" class="hide" />
+      <div class="tabs">
+        <button class="tab active" data-tab="study">Study</button>
+        <button class="tab" data-tab="builder">Builder</button>
+        <button class="tab" data-tab="cases">Cases</button>
+        <button class="tab" data-tab="stats">Stats</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+    <!-- LEFT -->
+    <div>
+      <div class="card">
+        <div class="hd"><h3>Filters</h3></div>
+        <div class="bd">
+          <div class="field">
+            <label class="muted">Search</label>
+            <input id="q" placeholder="Search cards & cases…" />
+          </div>
+
+          <div class="field">
+            <label class="muted">System</label>
+            <select id="systemFilter"></select>
+          </div>
+
+          <div class="field">
+            <label class="muted">Topic</label>
+            <select id="topicFilter"></select>
+          </div>
+
+          <div class="field">
+            <label class="muted">Tag</label>
+            <select id="tagFilter"></select>
+          </div>
+
+          <div class="checkbox">
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:13px">Due-only queue</div>
+              <div class="muted">Show only cards due today</div>
+            </div>
+            <input id="dueOnly" type="checkbox" checked />
+          </div>
+
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:10px">
+            <div class="muted">Cards in queue: <b id="queueCount">0</b></div>
+            <button class="btn" id="rebuildBtn">Rebuild</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sessionCard" class="card" style="margin-top:12px">
+        <div class="hd"><h3>Session</h3></div>
+        <div class="bd">
+          <div class="kpi">
+            <div><div class="muted">Reviewed</div><div id="reviewedN" class="n">0</div></div>
+            <div><div class="muted">Remaining</div><div id="remainingN" class="n">0</div></div>
+          </div>
+          <div class="pillrow" style="margin-top:10px">
+            <span class="badge">Again: <b id="sAgain">0</b></span>
+            <span class="badge">Hard: <b id="sHard">0</b></span>
+            <span class="badge">Good: <b id="sGood">0</b></span>
+            <span class="badge">Easy: <b id="sEasy">0</b></span>
+          </div>
+          <div class="prog" style="margin-top:10px"><div id="progressBar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <!-- STUDY -->
+      <div id="tab-study" class="tabPane">
+        <div class="card">
+          <div class="hd">
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <h3>Study</h3>
+              <div class="right">
+                <select id="studyMode">
+                  <option value="flash">Flashcards</option>
+                  <option value="mcq">MCQ</option>
+                  <option value="short">Short answer</option>
+                </select>
+                <span class="badge" id="idxBadge">0/0</span>
+              </div>
+            </div>
+          </div>
+          <div class="bd" id="studyBody"></div>
+        </div>
+      </div>
+
+      <!-- BUILDER -->
+      <div id="tab-builder" class="tabPane hide">
+        <div class="card">
+          <div class="hd"><h3>Add a card</h3></div>
+          <div class="bd">
+            <div class="two">
+              <div class="field">
+                <label class="muted">Topic</label>
+                <input id="newTopic" placeholder="e.g., Inflammation" />
+              </div>
+              <div class="field">
+                <label class="muted">System</label>
+                <input id="newSystem" value="General" />
+              </div>
+            </div>
+
+            <div class="two">
+              <div class="field">
+                <label class="muted">Tags (comma-separated)</label>
+                <input id="newTags" placeholder="necrosis, hypoxia, ROS" />
+              </div>
+              <div class="field">
+                <label class="muted">Difficulty</label>
+                <select id="newDiff">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="muted">Front</label>
+              <textarea id="newFront" placeholder="Question/prompt"></textarea>
+            </div>
+            <div class="field">
+              <label class="muted">Back</label>
+              <textarea id="newBack" placeholder="Answer/explanation"></textarea>
+            </div>
+
+            <button class="btn primary" id="addCardBtn">Add card</button>
+
+            <div class="hr"></div>
+
+            <div class="field">
+              <label class="muted">Search your cards</label>
+              <input id="cardListQ" placeholder="Search…" />
+            </div>
+            <div class="list" id="cardList"></div>
+            <div class="muted" id="cardListNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CASES -->
+      <div id="tab-cases" class="tabPane hide">
+        <div class="card">
+          <div class="hd"><h3>Add a case</h3></div>
+          <div class="bd">
+            <div class="two">
+              <div class="field">
+                <label class="muted">Title</label>
+                <input id="caseTitle" placeholder="Case title" />
+              </div>
+              <div class="field">
+                <label class="muted">System</label>
+                <input id="caseSystem" value="General" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="muted">Tags (comma-separated)</label>
+              <input id="caseTags" placeholder="cardio, necrosis" />
+            </div>
+
+            <div class="field">
+              <label class="muted">Stem</label>
+              <textarea id="caseStem" placeholder="Vignette / stem"></textarea>
+            </div>
+
+            <div class="caseGrid">
+              <div class="field">
+                <label class="muted">Key findings (one per line)</label>
+                <textarea id="caseFindings"></textarea>
+              </div>
+              <div class="field">
+                <label class="muted">Differential (one per line)</label>
+                <textarea id="caseDiff"></textarea>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="muted">Diagnosis</label>
+              <input id="caseDx" placeholder="Final diagnosis" />
+            </div>
+
+            <div class="field">
+              <label class="muted">Explanation</label>
+              <textarea id="caseExplain"></textarea>
+            </div>
+
+            <button class="btn primary" id="addCaseBtn">Add case</button>
+
+            <div class="hr"></div>
+
+            <div class="field">
+              <label class="muted">Search cases</label>
+              <input id="caseQ" placeholder="Search…" />
+            </div>
+            <div id="caseList" class="row" style="flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div id="tab-stats" class="tabPane hide">
+        <div class="row">
+          <div class="card" style="flex:1">
+            <div class="bd" style="padding-top:14px">
+              <div class="muted">Total cards</div>
+              <div style="font-size:34px;font-weight:900" id="stTotal">0</div>
+            </div>
+          </div>
+          <div class="card" style="flex:1">
+            <div class="bd" style="padding-top:14px">
+              <div class="muted">Due now</div>
+              <div style="font-size:34px;font-weight:900" id="stDue">0</div>
+            </div>
+          </div>
+          <div class="card" style="flex:1">
+            <div class="bd" style="padding-top:14px">
+              <div class="muted">Cases</div>
+              <div style="font-size:34px;font-weight:900" id="stCases">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <div class="card" style="flex:1">
+            <div class="hd"><h3>Learning</h3></div>
+            <div class="bd">
+              <div class="card" style="box-shadow:none">
+                <div class="bd">
+                  <div class="muted">Cards with ≥3 successful reviews (proxy for “learned”)</div>
+                  <div style="font-size:26px;font-weight:900" id="stLearned">0</div>
+                </div>
+              </div>
+              <div class="card" style="box-shadow:none;margin-top:10px">
+                <div class="bd">
+                  <div class="muted">Total lapses</div>
+                  <div style="font-size:26px;font-weight:900" id="stLapses">0</div>
+                </div>
+              </div>
+              <div class="card" style="box-shadow:none;margin-top:10px">
+                <div class="bd">
+                  <div class="muted">Difficulty breakdown</div>
+                  <div class="pillrow" style="margin-top:8px">
+                    <span class="badge">Easy: <b id="stEasy">0</b></span>
+                    <span class="badge">Medium: <b id="stMed">0</b></span>
+                    <span class="badge">Hard: <b id="stHard">0</b></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="flex:1">
+            <div class="hd"><h3>Coverage</h3></div>
+            <div class="bd">
+              <div class="card" style="box-shadow:none">
+                <div class="bd">
+                  <div style="font-weight:800">Top topics</div>
+                  <div id="topTopics" style="margin-top:10px"></div>
+                </div>
+              </div>
+
+              <div class="card" style="box-shadow:none;margin-top:10px">
+                <div class="bd">
+                  <div style="font-weight:800">Top systems</div>
+                  <div id="topSystems" style="margin-top:10px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="tab-settings" class="tabPane hide">
+        <div class="card">
+          <div class="hd"><h3>Settings</h3></div>
+          <div class="bd">
+            <div class="card" style="box-shadow:none">
+              <div class="bd">
+                <div style="font-weight:900">Backup & sharing</div>
+                <div class="muted" style="margin-top:4px">Export your deck to JSON, or import someone else’s export (it merges).</div>
+                <div class="row" style="margin-top:10px">
+                  <button class="btn primary" id="exportBtn2">Export</button>
+                  <button class="btn" id="importBtn2">Import</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;margin-top:10px">
+              <div class="bd">
+                <div style="font-weight:900">Danger zone</div>
+                <div class="muted" style="margin-top:4px">Reset to the default seed content.</div>
+                <div class="row" style="margin-top:10px">
+                  <button class="btn danger" id="resetBtn">Reset app</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;margin-top:10px">
+              <div class="bd">
+                <div style="font-weight:900">PWA (installable app)</div>
+                <div class="muted" style="margin-top:4px">
+                  To install on phone, you must host this over HTTPS (or use localhost). See the PWA files below.
+                </div>
+              </div>
+            </div>
+
+            <div class="center muted" style="margin-top:14px">Data is stored locally in your browser (localStorage).</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="center muted" style="margin-top:18px">Built for offline study. (For real offline, add the service worker below.)</div>
+</div>
+
+<script>
+/* -------------------- Data + Storage -------------------- */
+const STORAGE_KEY = "pathology_app_v1_html";
+
+const now = () => Date.now();
+const uid = () => Math.random().toString(36).slice(2, 10) + "_" + Math.random().toString(36).slice(2, 6);
+const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+const daysFromNow = (n)=> now() + n*24*60*60*1000;
+const formatDate = (ts)=> new Date(ts).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"2-digit"});
+
+function normalizeTags(raw){
+  return Array.from(new Set(raw.split(",").map(t=>t.trim()).filter(Boolean).map(t=>t.replace(/\s+/g," "))));
+}
+
+function applyReview(card, rating){
+  const c = {...card, updatedAt: now()};
+  const q = rating===0 ? 1 : rating===1 ? 3 : rating===2 ? 4 : 5;
+  if(q < 3){
+    c.lapses += 1;
+    c.reps = 0;
+    c.intervalDays = 1;
+    c.ease = clamp(c.ease - 0.2, 1.3, 2.8);
+  } else {
+    c.reps += 1;
+    if(c.reps === 1) c.intervalDays = 1;
+    else if(c.reps === 2) c.intervalDays = 3;
+    else c.intervalDays = Math.round(c.intervalDays * c.ease);
+
+    const delta = 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02);
+    c.ease = clamp(c.ease + delta, 1.3, 2.8);
+  }
+  c.dueAt = daysFromNow(c.intervalDays);
+  return c;
+}
+
+function pickRandom(arr, k, excludeSet){
+  const pool = arr.filter(x => !(excludeSet && excludeSet.has(x)));
+  const out = [];
+  const used = new Set();
+  while(out.length < k && out.length < pool.length){
+    const idx = Math.floor(Math.random()*pool.length);
+    if(used.has(idx)) continue;
+    used.add(idx);
+    out.push(pool[idx]);
+  }
+  return out;
+}
+
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+const seedData = {
+  version: 1,
+  cards: [
+    {
+      id: uid(),
+      topic: "Acute inflammation",
+      system: "General",
+      tags: ["neutrophils","vascular","exudate"],
+      difficulty: "medium",
+      front: "List the key vascular events in acute inflammation.",
+      back: "(1) Transient vasoconstriction → (2) vasodilation (histamine, NO) → (3) ↑ vascular permeability (endothelial contraction/injury) → (4) stasis and leukocyte margination. Clinical: rubor, calor, tumor.",
+      createdAt: now(), updatedAt: now(),
+      dueAt: now(), intervalDays: 0, ease: 2.3, reps: 0, lapses: 0
+    },
+    {
+      id: uid(),
+      topic: "Cell injury",
+      system: "General",
+      tags: ["necrosis","apoptosis"],
+      difficulty: "easy",
+      front: "Name 3 morphologic patterns of necrosis.",
+      back: "Coagulative (ischemia in solid organs), liquefactive (brain infarct/abscess), caseous (TB), fat (pancreatitis), fibrinoid (immune-mediated vessel injury).",
+      createdAt: now(), updatedAt: now(),
+      dueAt: now(), intervalDays: 0, ease: 2.3, reps: 0, lapses: 0
+    },
+    {
+      id: uid(),
+      topic: "Neoplasia",
+      system: "General",
+      tags: ["oncogenes","tumor suppressor"],
+      difficulty: "hard",
+      front: "Differentiate oncogenes vs tumor suppressor genes (concept + inheritance pattern).",
+      back: "Oncogenes: gain-of-function, one allele sufficient (dominant at cellular level). Tumor suppressors: loss-of-function, typically both alleles must be inactivated (two-hit), recessive at cellular level.",
+      createdAt: now(), updatedAt: now(),
+      dueAt: now(), intervalDays: 0, ease: 2.3, reps: 0, lapses: 0
+    },
+  ],
+  cases: [
+    {
+      id: uid(),
+      title: "Chest pain + elevated troponin",
+      system: "Cardio",
+      stem: "A 58-year-old with crushing substernal chest pain for 2 hours. ECG shows ST elevation in II, III, aVF. Troponin is elevated.",
+      keyFindings: ["STEMI pattern","acute ischemic injury","troponin rise"],
+      differential: ["Acute myocardial infarction","Myocarditis","Takotsubo cardiomyopathy"],
+      diagnosis: "Acute myocardial infarction (inferior STEMI)",
+      explanation: "Ischemia → myocyte injury → membrane disruption → troponin release. Pathology evolves from wavy fibers (hours) → coagulative necrosis (1–3 days) → macrophages (3–7 days) → granulation tissue → scar.",
+      tags: ["ischemia","necrosis","cardio"],
+      createdAt: now(), updatedAt: now()
+    }
+  ]
+};
+
+let data = loadData();
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(seedData);
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.version===1 && Array.isArray(parsed.cards) && Array.isArray(parsed.cases)) return parsed;
+  }catch(e){}
+  return structuredClone(seedData);
+}
+function saveData(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+}
+
+/* -------------------- UI State -------------------- */
+let activeTab = "study";
+
+let filters = {
+  q: "",
+  system: "all",
+  topic: "all",
+  tag: "all",
+  dueOnly: true
+};
+
+let study = {
+  mode: "flash",
+  queue: [],
+  idx: 0,
+  reveal: false,
+  mcqChoice: null,
+  shortAnswer: "",
+  session: { done:0, again:0, hard:0, good:0, easy:0 }
+};
+
+/* -------------------- DOM Helpers -------------------- */
+const $ = (id)=>document.getElementById(id);
+
+function setTab(name){
+  activeTab = name;
+  document.querySelectorAll(".tab").forEach(b=>{
+    b.classList.toggle("active", b.dataset.tab===name);
+  });
+  document.querySelectorAll(".tabPane").forEach(p=>p.classList.add("hide"));
+  $("tab-"+name).classList.remove("hide");
+  $("sessionCard").classList.toggle("hide", name!=="study");
+  renderAll();
+}
+
+/* -------------------- Derived Lists -------------------- */
+function getDueCount(){
+  return data.cards.filter(c=>c.dueAt <= now()).length;
+}
+
+function getSystems(){
+  const s = new Set(["General"]);
+  data.cards.forEach(c=>s.add(c.system));
+  data.cases.forEach(c=>s.add(c.system));
+  return Array.from(s).sort();
+}
+function getTopics(){
+  const s = new Set();
+  data.cards.forEach(c=>s.add(c.topic));
+  return Array.from(s).sort();
+}
+function getTags(){
+  const s = new Set();
+  data.cards.forEach(c=>c.tags.forEach(t=>s.add(t)));
+  data.cases.forEach(c=>c.tags.forEach(t=>s.add(t)));
+  return Array.from(s).sort();
+}
+
+function filteredCards(){
+  const q = filters.q.trim().toLowerCase();
+  return data.cards
+    .filter(c => filters.dueOnly ? c.dueAt <= now() : true)
+    .filter(c => filters.system==="all" ? true : c.system===filters.system)
+    .filter(c => filters.topic==="all" ? true : c.topic===filters.topic)
+    .filter(c => filters.tag==="all" ? true : c.tags.includes(filters.tag))
+    .filter(c => {
+      if(!q) return true;
+      const hay = [c.topic,c.system,c.front,c.back,c.tags.join(" ")].join(" ").toLowerCase();
+      return hay.includes(q);
+    })
+    .sort((a,b)=>a.dueAt - b.dueAt);
+}
+
+/* -------------------- Study -------------------- */
+function rebuildQueue(){
+  const ids = filteredCards().map(c=>c.id);
+  study.queue = ids;
+  study.idx = 0;
+  study.reveal = false;
+  study.mcqChoice = null;
+  study.shortAnswer = "";
+  study.session = { done:0, again:0, hard:0, good:0, easy:0 };
+  renderAll();
+}
+
+function currentCard(){
+  const id = study.queue[study.idx];
+  return data.cards.find(c=>c.id===id) || null;
+}
+
+function getMCQ(card){
+  const correct = card.back;
+  const pool = data.cards.filter(c=>c.id!==card.id).map(c=>c.back).filter(Boolean);
+  const distractors = pickRandom(pool, 3, new Set([correct]));
+  const options = shuffle([correct, ...distractors]);
+  return { correct, options };
+}
+
+function mark(rating){
+  const card = currentCard();
+  if(!card) return;
+
+  const updated = applyReview(card, rating);
+  data.cards = data.cards.map(c=>c.id===updated.id ? updated : c);
+  saveData();
+
+  study.session.done += 1;
+  if(rating===0) study.session.again += 1;
+  if(rating===1) study.session.hard += 1;
+  if(rating===2) study.session.good += 1;
+  if(rating===3) study.session.easy += 1;
+
+  if(study.idx < study.queue.length - 1) study.idx += 1;
+  study.reveal = false;
+  study.mcqChoice = null;
+  study.shortAnswer = "";
+  renderAll();
+}
+
+function nextCard(){
+  study.idx = Math.min(study.idx+1, Math.max(0, study.queue.length-1));
+  study.reveal = false; study.mcqChoice=null; study.shortAnswer="";
+  renderAll();
+}
+function prevCard(){
+  study.idx = Math.max(0, study.idx-1);
+  study.reveal = false; study.mcqChoice=null; study.shortAnswer="";
+  renderAll();
+}
+
+/* -------------------- Builder / Cases -------------------- */
+function addCard(){
+  const front = $("newFront").value.trim();
+  const back = $("newBack").value.trim();
+  const topic = ($("newTopic").value.trim() || "Misc");
+  const system = ($("newSystem").value.trim() || "General");
+  const tags = normalizeTags($("newTags").value);
+  const diff = $("newDiff").value;
+
+  if(!front || !back) return alert("Front and Back are required.");
+  const card = {
+    id: uid(), topic, system, tags, difficulty: diff,
+    front, back,
+    createdAt: now(), updatedAt: now(),
+    dueAt: now(), intervalDays:0, ease:2.3, reps:0, lapses:0
+  };
+  data.cards.unshift(card);
+  saveData();
+
+  $("newTopic").value=""; $("newTags").value=""; $("newFront").value=""; $("newBack").value="";
+  renderAll();
+}
+
+function deleteCard(id){
+  if(!confirm("Delete this card?")) return;
+  data.cards = data.cards.filter(c=>c.id!==id);
+  study.queue = study.queue.filter(x=>x!==id);
+  saveData();
+  renderAll();
+}
+
+function addCase(){
+  const stem = $("caseStem").value.trim();
+  const dx = $("caseDx").value.trim();
+  if(!stem || !dx) return alert("Stem and Diagnosis are required.");
+
+  const item = {
+    id: uid(),
+    title: ($("caseTitle").value.trim() || "Untitled case"),
+    system: ($("caseSystem").value.trim() || "General"),
+    stem,
+    keyFindings: $("caseFindings").value.split("\n").map(s=>s.trim()).filter(Boolean),
+    differential: $("caseDiff").value.split("\n").map(s=>s.trim()).filter(Boolean),
+    diagnosis: dx,
+    explanation: $("caseExplain").value.trim(),
+    tags: normalizeTags($("caseTags").value),
+    createdAt: now(), updatedAt: now()
+  };
+  data.cases.unshift(item);
+  saveData();
+
+  $("caseTitle").value=""; $("caseTags").value=""; $("caseStem").value="";
+  $("caseFindings").value=""; $("caseDiff").value=""; $("caseDx").value=""; $("caseExplain").value="";
+  renderAll();
+}
+
+function deleteCase(id){
+  if(!confirm("Delete this case?")) return;
+  data.cases = data.cases.filter(c=>c.id!==id);
+  saveData();
+  renderAll();
+}
+
+/* -------------------- Import / Export / Reset -------------------- */
+function exportAll(){
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "pathology-study-export.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importFile(file){
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if(!parsed || !Array.isArray(parsed.cards) || !Array.isArray(parsed.cases)) throw new Error("bad");
+    data = { version:1, cards:[...parsed.cards, ...data.cards], cases:[...parsed.cases, ...data.cases] };
+    saveData();
+    rebuildQueue();
+  } catch(e){
+    alert("Import failed. Make sure it's a valid exported JSON file.");
+  }
+}
+
+function resetAll(){
+  if(!confirm("Reset to default seed data? This overwrites your local data.")) return;
+  data = structuredClone(seedData);
+  saveData();
+  rebuildQueue();
+}
+
+/* -------------------- Render -------------------- */
+function renderFilters(){
+  // inputs
+  $("q").value = filters.q;
+  $("dueOnly").checked = !!filters.dueOnly;
+
+  // select options
+  const systems = getSystems();
+  const topics = getTopics();
+  const tags = getTags();
+
+  fillSelect($("systemFilter"), ["all", ...systems], filters.system, "All systems");
+  fillSelect($("topicFilter"), ["all", ...topics], filters.topic, "All topics");
+  fillSelect($("tagFilter"), ["all", ...tags], filters.tag, "All tags");
+
+  const fc = filteredCards();
+  $("queueCount").textContent = fc.length;
+}
+
+function fillSelect(sel, values, current, allLabel){
+  sel.innerHTML = "";
+  values.forEach(v=>{
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v==="all" ? allLabel : v;
+    if(v===current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function renderHeader(){
+  const due = getDueCount();
+  const badge = $("dueBadge");
+  badge.textContent = due ? `${due} due` : "0 due";
+  badge.classList.toggle("primary", !!due);
+}
+
+function renderSession(){
+  const card = currentCard();
+  $("reviewedN").textContent = study.session.done;
+  const remaining = Math.max(0, study.queue.length - study.idx - (card?0:1));
+  $("remainingN").textContent = remaining;
+
+  $("sAgain").textContent = study.session.again;
+  $("sHard").textContent = study.session.hard;
+  $("sGood").textContent = study.session.good;
+  $("sEasy").textContent = study.session.easy;
+
+  const total = study.queue.length || 0;
+  const pct = total ? (100 * Math.min(study.idx+1, total) / total) : 0;
+  $("progressBar").style.width = pct + "%";
+}
+
+function renderStudy(){
+  const body = $("studyBody");
+  const total = study.queue.length;
+  $("idxBadge").textContent = total ? `${study.idx+1}/${total}` : "0/0";
+
+  const card = currentCard();
+  if(!card){
+    body.innerHTML = `
+      <div class="card" style="box-shadow:none">
+        <div class="bd center" style="padding-top:18px">
+          <div style="font-size:28px">❓</div>
+          <div style="font-weight:900;margin-top:6px">No cards in the current queue</div>
+          <div class="muted" style="margin-top:4px">Try turning off “Due-only”, or clear filters.</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const tags = card.tags.slice(0,4).map(t=>`<span class="pill outline">${escapeHtml(t)}</span>`).join("");
+  const meta = `
+    <div class="pillrow">
+      <span class="pill secondary">${escapeHtml(card.system)}</span>
+      <span class="pill secondary">${escapeHtml(card.topic)}</span>
+      <span class="pill secondary">${escapeHtml(card.difficulty)}</span>
+      ${tags}
+    </div>
+  `;
+
+  const prompt = `
+    <div class="card" style="box-shadow:none;margin-top:10px">
+      <div class="bd" style="padding-top:12px">
+        <div class="muted">Prompt</div>
+        <div style="font-weight:800;margin-top:8px;white-space:pre-wrap">${escapeHtml(card.front)}</div>
+      </div>
+    </div>
+  `;
+
+  const mode = $("studyMode").value;
+
+  let modeHtml = "";
+  if(mode === "flash"){
+    modeHtml = `
+      <div style="margin-top:10px">
+        <button class="btn ${study.reveal ? "" : "primary"}" style="width:100%" id="revealBtn">${study.reveal ? "Hide answer" : "Reveal answer"}</button>
+        ${study.reveal ? `
+          <div class="card" style="box-shadow:none;margin-top:10px">
+            <div class="bd" style="padding-top:12px">
+              <div class="muted">Answer</div>
+              <div class="small" style="white-space:pre-wrap;margin-top:8px">${escapeHtml(card.back)}</div>
+              <div class="muted" style="margin-top:10px">
+                Due: ${formatDate(card.dueAt)} • Interval: ${card.intervalDays}d • Ease: ${card.ease.toFixed(2)} • Reps: ${card.reps} • Lapses: ${card.lapses}
+              </div>
+            </div>
+          </div>
+        ` : "" }
+      </div>
+    `;
+  }
+
+  if(mode === "mcq"){
+    const mcq = getMCQ(card);
+    const opts = mcq.options.map(opt=>{
+      const selected = study.mcqChoice === opt;
+      const show = study.mcqChoice !== null;
+      const isCorrect = opt === mcq.correct;
+
+      let cls = "btn";
+      if(!show){
+        cls += selected ? " primary" : "";
+      } else {
+        if(isCorrect) cls += " primary";
+        else if(selected) cls += " danger";
+      }
+
+      return `<button class="${cls}" style="width:100%;text-align:left;white-space:normal" data-opt="${encodeAttr(opt)}">${escapeHtml(opt)}</button>`;
+    }).join("");
+
+    modeHtml = `
+      <div style="margin-top:10px" class="small muted">Pick the best answer:</div>
+      <div class="row" style="flex-direction:column;margin-top:10px">${opts}</div>
+      ${study.mcqChoice !== null ? `
+        <div class="card" style="box-shadow:none;margin-top:10px">
+          <div class="bd" style="padding-top:12px">
+            <div class="muted">Explanation</div>
+            <div class="small" style="white-space:pre-wrap;margin-top:8px">${escapeHtml(card.back)}</div>
+          </div>
+        </div>
+      ` : "" }
+    `;
+  }
+
+  if(mode === "short"){
+    modeHtml = `
+      <div style="margin-top:10px">
+        <textarea id="shortAnswer" placeholder="Type your answer (bullet points are fine)…">${escapeHtml(study.shortAnswer)}</textarea>
+        <button class="btn ${study.reveal ? "" : "primary"}" style="width:100%;margin-top:10px" id="showAnswerBtn">Show model answer</button>
+        ${study.reveal ? `
+          <div class="card" style="box-shadow:none;margin-top:10px">
+            <div class="bd" style="padding-top:12px">
+              <div class="muted">Model answer</div>
+              <div class="small" style="white-space:pre-wrap;margin-top:8px">${escapeHtml(card.back)}</div>
+            </div>
+          </div>
+        ` : "" }
+      </div>
+    `;
+  }
+
+  const nav = `
+    <div class="row" style="justify-content:space-between;align-items:center;margin-top:12px">
+      <div class="row">
+        <button class="btn" id="prevBtn">Back</button>
+        <button class="btn" id="nextBtn">Next</button>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn danger" id="againBtn">Again</button>
+        <button class="btn" id="hardBtn">Hard</button>
+        <button class="btn primary" id="goodBtn">Good</button>
+        <button class="btn" id="easyBtn">Easy</button>
+      </div>
+    </div>
+  `;
+
+  body.innerHTML = meta + prompt + modeHtml + nav;
+
+  // wire events
+  if(mode === "flash"){
+    const rb = $("revealBtn");
+    if(rb) rb.onclick = ()=>{ study.reveal = !study.reveal; renderStudy(); };
+  }
+  if(mode === "mcq"){
+    body.querySelectorAll("button[data-opt]").forEach(btn=>{
+      btn.onclick = ()=>{
+        study.mcqChoice = decodeAttr(btn.getAttribute("data-opt"));
+        renderStudy();
+      };
+    });
+  }
+  if(mode === "short"){
+    const sa = $("shortAnswer");
+    if(sa) sa.oninput = (e)=>{ study.shortAnswer = e.target.value; };
+    const sb = $("showAnswerBtn");
+    if(sb) sb.onclick = ()=>{ study.reveal = true; renderStudy(); };
+  }
+
+  $("prevBtn").onclick = prevCard;
+  $("nextBtn").onclick = nextCard;
+  $("againBtn").onclick = ()=>mark(0);
+  $("hardBtn").onclick = ()=>mark(1);
+  $("goodBtn").onclick = ()=>mark(2);
+  $("easyBtn").onclick = ()=>mark(3);
+}
+
+function renderBuilder(){
+  const q = $("cardListQ").value.trim().toLowerCase();
+  let list = data.cards;
+  if(q){
+    list = list.filter(c => [c.topic,c.system,c.front,c.back,c.tags.join(" ")].join(" ").toLowerCase().includes(q));
+  }
+  const maxShow = 200;
+  const show = list.slice(0, maxShow);
+  $("cardList").innerHTML = show.map(c=>`
+    <div class="item">
+      <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start">
+        <div style="min-width:0">
+          <div class="pillrow">
+            <span class="pill secondary">${escapeHtml(c.system)}</span>
+            <span class="pill secondary">${escapeHtml(c.topic)}</span>
+            <span class="pill outline">due ${formatDate(c.dueAt)}</span>
+          </div>
+          <div class="lineclamp2" style="margin-top:8px;font-weight:800;white-space:pre-wrap">${escapeHtml(c.front)}</div>
+          <div class="lineclamp2 muted" style="margin-top:4px;white-space:pre-wrap">${escapeHtml(c.back)}</div>
+        </div>
+        <button class="btn" data-del="${c.id}">🗑️</button>
+      </div>
+    </div>
+  `).join("");
+
+  $("cardList").querySelectorAll("button[data-del]").forEach(b=>{
+    b.onclick = ()=>deleteCard(b.getAttribute("data-del"));
+  });
+
+  $("cardListNote").textContent = list.length > maxShow ? "Showing first 200 results for performance." : "";
+}
+
+function renderCases(){
+  const q = $("caseQ").value.trim().toLowerCase();
+  let list = data.cases;
+  if(q){
+    list = list.filter(c => [c.title,c.system,c.stem,c.diagnosis,c.tags.join(" ")].join(" ").toLowerCase().includes(q));
+  }
+
+  $("caseList").innerHTML = list.map(c=>`
+    <div class="card caseCard">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="row" style="align-items:center">
+            <div style="font-weight:900">${escapeHtml(c.title)}</div>
+            <span class="badge">${escapeHtml(c.system)}</span>
+          </div>
+          <div class="pillrow" style="margin-top:8px">
+            ${(c.tags||[]).slice(0,6).map(t=>`<span class="pill outline">${escapeHtml(t)}</span>`).join("")}
+          </div>
+        </div>
+        <button class="btn" data-delcase="${c.id}">🗑️</button>
+      </div>
+
+      <div class="card" style="box-shadow:none;margin-top:10px">
+        <div class="bd" style="padding-top:12px">
+          <div class="muted">Stem</div>
+          <div class="small" style="white-space:pre-wrap;margin-top:8px">${escapeHtml(c.stem)}</div>
+        </div>
+      </div>
+
+      <div class="caseGrid" style="margin-top:10px">
+        <div class="card" style="box-shadow:none">
+          <div class="bd" style="padding-top:12px">
+            <div class="muted">Key findings</div>
+            <ul class="small" style="margin-top:8px">
+              ${(c.keyFindings||[]).map(k=>`<li>${escapeHtml(k)}</li>`).join("")}
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="box-shadow:none">
+          <div class="bd" style="padding-top:12px">
+            <div class="muted">Differential checklist</div>
+            <div style="margin-top:8px">
+              ${(c.differential||[]).map(d=>`
+                <label class="row" style="align-items:center;gap:10px;margin:6px 0">
+                  <input type="checkbox" />
+                  <span class="small">${escapeHtml(d)}</span>
+                </label>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="box-shadow:none;margin-top:10px">
+        <div class="bd" style="padding-top:12px">
+          <div class="muted">Diagnosis</div>
+          <div class="small" style="font-weight:900;margin-top:8px">${escapeHtml(c.diagnosis)}</div>
+          ${c.explanation ? `<div class="small muted" style="white-space:pre-wrap;margin-top:8px">${escapeHtml(c.explanation)}</div>` : ""}
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  $("caseList").querySelectorAll("button[data-delcase]").forEach(b=>{
+    b.onclick = ()=>deleteCase(b.getAttribute("data-delcase"));
+  });
+}
+
+function renderStats(){
+  const due = getDueCount();
+  const total = data.cards.length;
+  const casesCount = data.cases.length;
+
+  let learned = 0, lapses = 0;
+  const byDiff = { easy:0, medium:0, hard:0 };
+  const byTopic = {};
+  const bySystem = {};
+
+  data.cards.forEach(c=>{
+    byDiff[c.difficulty] = (byDiff[c.difficulty]||0)+1;
+    byTopic[c.topic] = (byTopic[c.topic]||0)+1;
+    bySystem[c.system] = (bySystem[c.system]||0)+1;
+    if(c.reps >= 3) learned += 1;
+    lapses += c.lapses;
+  });
+
+  $("stTotal").textContent = total;
+  $("stDue").textContent = due;
+  $("stCases").textContent = casesCount;
+
+  $("stLearned").textContent = learned;
+  $("stLapses").textContent = lapses;
+
+  $("stEasy").textContent = byDiff.easy;
+  $("stMed").textContent = byDiff.medium;
+  $("stHard").textContent = byDiff.hard;
+
+  const topTopics = Object.entries(byTopic).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topSystems = Object.entries(bySystem).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  $("topTopics").innerHTML = topTopics.length
+    ? topTopics.map(([t,n])=>rowStat(t,n)).join("")
+    : `<div class="muted small">Add some cards to see this.</div>`;
+
+  $("topSystems").innerHTML = topSystems.length
+    ? topSystems.map(([s,n])=>rowStat(s,n)).join("")
+    : `<div class="muted small">Add some cards to see this.</div>`;
+}
+
+function rowStat(label, n){
+  return `
+    <div class="row" style="justify-content:space-between;align-items:center;margin:8px 0">
+      <div class="small">${escapeHtml(label)}</div>
+      <span class="badge">${n}</span>
+    </div>
+  `;
+}
+
+function renderAll(){
+  renderHeader();
+  renderFilters();
+
+  if(study.queue.length === 0) rebuildQueue(); // initialise once
+  renderSession();
+
+  if(activeTab==="study") renderStudy();
+  if(activeTab==="builder") renderBuilder();
+  if(activeTab==="cases") renderCases();
+  if(activeTab==="stats") renderStats();
+}
+
+/* -------------------- Safe HTML helpers -------------------- */
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function encodeAttr(s){
+  // for data- attributes
+  return btoa(unescape(encodeURIComponent(String(s))));
+}
+function decodeAttr(s){
+  try{
+    return decodeURIComponent(escape(atob(String(s))));
+  }catch(e){ return String(s); }
+}
+
+/* -------------------- Wire Events -------------------- */
+document.querySelectorAll(".tab").forEach(b=>{
+  b.onclick = ()=>setTab(b.dataset.tab);
+});
+
+$("studyMode").onchange = (e)=>{ study.mode = e.target.value; study.reveal=false; study.mcqChoice=null; renderStudy(); };
+
+$("q").oninput = (e)=>{ filters.q = e.target.value; renderAll(); };
+$("systemFilter").onchange = (e)=>{ filters.system = e.target.value; renderAll(); };
+$("topicFilter").onchange = (e)=>{ filters.topic = e.target.value; renderAll(); };
+$("tagFilter").onchange = (e)=>{ filters.tag = e.target.value; renderAll(); };
+$("dueOnly").onchange = (e)=>{ filters.dueOnly = e.target.checked; study.queue=[]; renderAll(); };
+
+$("rebuildBtn").onclick = rebuildQueue;
+
+$("addCardBtn").onclick = addCard;
+$("cardListQ").oninput = ()=>renderBuilder();
+
+$("addCaseBtn").onclick = addCase;
+$("caseQ").oninput = ()=>renderCases();
+
+/* Import / Export */
+const fileInput = $("fileInput");
+$("importBtn").onclick = ()=>fileInput.click();
+$("importBtn2").onclick = ()=>fileInput.click();
+fileInput.onchange = async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(f) await importFile(f);
+  e.target.value = "";
+};
+
+$("exportBtn").onclick = exportAll;
+$("exportBtn2").onclick = exportAll;
+
+$("resetBtn").onclick = resetAll;
+
+/* Initial render */
+renderAll();
+
+/* (Optional PWA) Register service worker if present */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
