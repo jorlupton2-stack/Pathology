@@ -1,9 +1,11 @@
 {
   "name": "Pathology Study App",
   "short_name": "Pathology",
-  "start_url": "./index.html",
+  "start_url": "/pathology-app/index.html",
+  "scope": "/pathology-app/"
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": []
 }
+
