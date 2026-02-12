@@ -7,7 +7,7 @@
   <title>Pathology Study App</title>
 
   <!-- (Optional PWA) -->
-  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="manifest" href="/pathology-app/manifest.webmanifest" />
 
   <style>
     :root{
@@ -1196,3 +1196,4 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
+
